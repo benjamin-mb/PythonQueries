@@ -102,4 +102,3 @@ plt.pie(
 plt.title("Distribución de estudiantes según promedio de notas")
 plt.tight_layout()
 plt.show()
-j
