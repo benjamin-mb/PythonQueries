@@ -1,4 +1,5 @@
 import requests
+from requests.auth import HTTPBasicAuth
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -7,12 +8,12 @@ import matplotlib.pyplot as plt
 #cuantos programas hay por escuela
 
 Escuelas_URL="https://cesde-academic-app-development.up.railway.app/escuela/lista"
-Escuelas_response=requests.get(Escuelas_URL)
+Escuelas_response=requests.get(Escuelas_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 data_Escuelas=Escuelas_response.json()
 df_escuelas=pd.DataFrame(data_Escuelas)
 
 Programas_URL="https://cesde-academic-app-development.up.railway.app/programa/lista"
-ProgramasResponse=requests.get(Programas_URL)
+ProgramasResponse=requests.get(Programas_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 data_Programas=ProgramasResponse.json()
 df_programas=pd.DataFrame(data_Programas)
 
