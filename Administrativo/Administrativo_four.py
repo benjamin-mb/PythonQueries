@@ -1,10 +1,11 @@
 import requests
+from requests.auth import HTTPBasicAuth
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 ClasesHorarios_URL="https://cesde-academic-app-development.up.railway.app/clase-horario/lista"
-response_ClaseHorario=requests.get(ClasesHorarios_URL)
+response_ClaseHorario=requests.get(ClasesHorarios_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 data_claseHorario=response_ClaseHorario.json()
 df_claseHorarios=pd.DataFrame(data_claseHorario)
 

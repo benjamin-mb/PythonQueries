@@ -3,12 +3,12 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
-
+from requests.auth import HTTPBasicAuth
 # Evolución de asistencias por fecha
 #id 13
 
 Asistencia_URL="https://cesde-academic-app-development.up.railway.app/asistencia/estudiante/13"
-responseAsistenciaEstudiante=requests.get(Asistencia_URL)
+responseAsistenciaEstudiante=requests.get(Asistencia_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 dataAsistencia=responseAsistenciaEstudiante.json()
 df_AsistenciaEstudiante=pd.DataFrame(dataAsistencia)
 

@@ -2,18 +2,19 @@ import requests
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from requests.auth import HTTPBasicAuth
 
 #¿Qué estudiantes están en riesgo académico  muchas inasistencias?*
 
 ##accedo a docentes
 Docentes_URL="https://cesde-academic-app-development.up.railway.app/usuario/buscar/tipo/DOCENTE"
-responseDocentes=requests.get(Docentes_URL)
+responseDocentes=requests.get(Docentes_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 dataDocente=responseDocentes.json()
 df_docentes = pd.DataFrame(dataDocente)
 
 ##accedo a las clases para obetener el codigo del grupo
 Clases_URL="https://cesde-academic-app-development.up.railway.app/clase/docente/101"
-responseClases=requests.get(Clases_URL)
+responseClases=requests.get(Clases_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 dataClase=responseClases.json()
 df_clases =pd.DataFrame(dataClase)
 
@@ -21,7 +22,7 @@ codigoGrupo='P1-S2025-1-1'
 
 #por el codigo del grupo busco en el endpoint el id
 GrupoCodigo_URL=f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{codigoGrupo}"
-responseGrupoPorCodigo=requests.get(GrupoCodigo_URL)
+responseGrupoPorCodigo=requests.get(GrupoCodigo_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 dataGroupdGetId=responseGrupoPorCodigo.json()
 df_group=pd.DataFrame(dataGroupdGetId)
 

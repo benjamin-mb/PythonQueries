@@ -3,19 +3,20 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+from requests.auth import HTTPBasicAuth
 
 
 ##Cuál es el promedio de notas de mis estudiantes por asignatura?
 
 ##accedo a docentes
 Docentes_URL="https://cesde-academic-app-development.up.railway.app/usuario/buscar/tipo/DOCENTE"
-responseDocentes=requests.get(Docentes_URL)
+responseDocentes=requests.get(Docentes_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 dataDocente=responseDocentes.json()
 df_docentes = pd.DataFrame(dataDocente)
 
 ##accedo a las clases para obetener el codigo del grupo
 Clases_URL="https://cesde-academic-app-development.up.railway.app/clase/docente/101"
-responseClases=requests.get(Clases_URL)
+responseClases=requests.get(Clases_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
 dataClase=responseClases.json()
 df_clases =pd.DataFrame(dataClase)
 #print(dataClase)

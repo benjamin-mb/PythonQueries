@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import json
+from requests.auth import HTTPBasicAuth
 
 #Analítica para calificaciones de una sola clase
 
@@ -13,7 +14,7 @@ estudianteId=13
 Calificaciones_URL=f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{estudianteId}"
 response=requests.get(Calificaciones_URL)
 data_Calificaciones=response.json()
-df_calificaciones = pd.DataFrame(data_Calificaciones)
+df_calificaciones = pd.DataFrame(data_Calificaciones,auth=HTTPBasicAuth("12344321", "DevUser123"))
 
 # Verifica si el DataFrame tiene datos
 print(df_calificaciones.head())  # <- Agregado para depurar
