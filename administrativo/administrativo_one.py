@@ -39,8 +39,8 @@ programa_distribucion = programa_estudiantes.groupby('programa')['total_estudian
 # Gráfico
 #plt.figure(figsize=(10, 6))
 #sns.barplot(data=programa_distribucion, x='total_estudiantes', y='programa', palette='Blues_d')
-#plt.title('Cantidad de Estudiantes por Programa')
-#plt.xlabel('Total de Estudiantes')
+#plt.title('Cantidad de estudiantes por Programa')
+#plt.xlabel('Total de estudiantes')
 #plt.ylabel('Programa')
 #plt.tight_layout()
 #plt.show()
