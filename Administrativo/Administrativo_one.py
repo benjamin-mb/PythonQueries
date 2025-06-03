@@ -1,8 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+
 
 # Distribución de estudiantes por programa
 
@@ -38,10 +37,10 @@ programa_estudiantes = programa_estudiantes.merge(grupos_info, on='grupoId')
 programa_distribucion = programa_estudiantes.groupby('programa')['total_estudiantes'].sum().reset_index()
 
 # Gráfico
-plt.figure(figsize=(10, 6))
-sns.barplot(data=programa_distribucion, x='total_estudiantes', y='programa', palette='Blues_d')
-plt.title('Cantidad de Estudiantes por Programa')
-plt.xlabel('Total de Estudiantes')
-plt.ylabel('Programa')
-plt.tight_layout()
-plt.show()
+#plt.figure(figsize=(10, 6))
+#sns.barplot(data=programa_distribucion, x='total_estudiantes', y='programa', palette='Blues_d')
+#plt.title('Cantidad de Estudiantes por Programa')
+#plt.xlabel('Total de Estudiantes')
+#plt.ylabel('Programa')
+#plt.tight_layout()
+#plt.show()

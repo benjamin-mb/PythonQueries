@@ -1,45 +1,29 @@
 import requests
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import json
 from requests.auth import HTTPBasicAuth
 
-#Analítica para calificaciones de una sola clase
+def analizar_calificaciones_estudiante_three():
+    estudianteId = 13
+    url = f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{estudianteId}"
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
-estudianteId=13
+    # 1. Llamar al endpoint
+    response = requests.get(url, auth=auth)
+    data = response.json()
 
+    # 2. Crear DataFrame
+    df = pd.DataFrame(data)
 
-Calificaciones_URL=f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{estudianteId}"
-response=requests.get(Calificaciones_URL)
-data_Calificaciones=response.json()
-df_calificaciones = pd.DataFrame(data_Calificaciones,auth=HTTPBasicAuth("12344321", "DevUser123"))
+    # Validar si hay datos
+    if df.empty:
+        return {"mensaje": "No hay calificaciones registradas para el estudiante."}
 
-# Verifica si el DataFrame tiene datos
-print(df_calificaciones.head())  # <- Agregado para depurar
+    # 3. Convertir fechas
+    df['fecha'] = pd.to_datetime(df['fecha'])
 
-# Convertir fecha
-df_calificaciones['fecha'] = pd.to_datetime(df_calificaciones['fecha'])
+    # 4. Ordenar por fecha
+    df = df.sort_values('fecha')
 
-# Ordenar por fecha
-df_calificaciones = df_calificaciones.sort_values('fecha')
-
-# Crear lista de colores según nota
-colors = ['red' if nota < 3 else 'blue' for nota in df_calificaciones['nota']]
-
-# Graficar
-plt.figure(figsize=(10, 5))
-plt.plot(df_calificaciones['fecha'], df_calificaciones['nota'], color='gray', linestyle='--')
-plt.scatter(df_calificaciones['fecha'], df_calificaciones['nota'], color=colors, s=100)
-plt.title('Evolución de notas (rojo = reprobado)')
-plt.xlabel('Fecha')
-plt.ylabel('Nota')
-plt.ylim(0, 5)
-plt.xticks(rotation=45)
-plt.grid(True, linestyle='--', alpha=0.6)
-plt.tight_layout()
-plt.show()
-
-
-
+    # 5. Seleccionar campos clave y devolver
+    resultado = df[['fecha', 'nota', 'actividad']].to_dict(orient='records')
+    return resultado
