@@ -66,7 +66,7 @@ df_estudiantes = pd.DataFrame(list(estudiantes_por_grupo.items()), columns=["Gru
 sns.barplot(data=df_estudiantes, x="Grupo_ID", y="Cantidad_Estudiantes")
 plt.title("Cantidad de estudiantes por grupo")
 plt.xlabel("ID del Grupo")
-plt.ylabel("Cantidad de Estudiantes")
+plt.ylabel("Cantidad de estudiantes")
 plt.tight_layout()
 plt.show()
 
