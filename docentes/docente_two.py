@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from requests.auth import HTTPBasicAuth
 
-def docente_obetener_estudiantes_en_riesgo_asistencia_two(docenteId : int):
+def docente_obetener_estudiantes_en_riesgo_asistencia_two(docenteId: int):
     
     # Autenticación fija
     auth = HTTPBasicAuth("12344321", "DevUser123")

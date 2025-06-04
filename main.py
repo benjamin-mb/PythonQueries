@@ -32,17 +32,17 @@ def get_estudiante_calificaciones_three(id: int):
     return analizar_calificaciones_estudiante_three(id)
 
 
-@app.get("/docentes/1/notas")
-def get_docentes_notas_grupo_one():
-    return docente_promedios_grupo_one()
+@app.get("/docentes/{id}/notas")
+def get_docentes_notas_grupo_one(id):
+    return docente_promedios_grupo_one(id)
 
-@app.get("docentes/2/asistencia")
-def get_docentes_riesgo_asistencia():
-    return docente_obetener_estudiantes_en_riesgo_asistencia_two()
+@app.get("docentes/{id}/asistencia")
+def get_docentes_riesgo_asistencia_two(id):
+    return docente_obetener_estudiantes_en_riesgo_asistencia_two(id)
 
-@app.get("docentes/3/aistencias/porcentajes")
-def get_porcentaje_estado_asistencias_three():
-    return docentes_porcentajes_de_estado_por_grupo_three()
+@app.get("docentes/{id}/aistencias/porcentajes")
+def get_porcentaje_estado_asistencias_three(id):
+    return docentes_porcentajes_de_estado_por_grupo_three(id)
 
 # Servidor Uvicorn para ejecutar directamente con `python main.py`
 if __name__ == "__main__":
