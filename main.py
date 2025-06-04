@@ -19,9 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/estudiantes/1/asistencias")
-def get_estudiante_asistencias():
-    return analizar_estudiante_one()
+@app.get("/estudiantes/{id}/asistencias")
+def get_estudiante_asistencias(id: int):
+    return analizar_estudiante_one(id)
 
 @app.get("/estudiantes/2/asistencias")
 def get_estudiantes_asistencias_2():
