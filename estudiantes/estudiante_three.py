@@ -2,9 +2,8 @@ import requests
 import pandas as pd
 from requests.auth import HTTPBasicAuth
 
-def analizar_calificaciones_estudiante_three():
-    estudianteId = 13
-    url = f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{estudianteId}"
+def analizar_calificaciones_estudiante_three(id: int):
+    url = f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{id}"
     auth = HTTPBasicAuth("12344321", "DevUser123")
 
     # 1. Llamar al endpoint
