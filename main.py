@@ -20,16 +20,16 @@ app.add_middleware(
 )
 
 @app.get("/estudiantes/{id}/asistencias")
-def get_estudiante_asistencias(id: int):
+def get_estudiante_asistencias_one(id: int):
     return analizar_estudiante_one(id)
 
-@app.get("/estudiantes/2/asistencias")
-def get_estudiantes_asistencias_2():
-    return analizar_estudiante_two()
+@app.get("/estudiantes/{id}/asistencias")
+def get_estudiantes_asistencias_two(id: int):
+    return analizar_estudiante_two(id)
 
-@app.get("/estudiantes/3/califiaciones")
-def get_estudiante_calificaciones_three():
-    return analizar_calificaciones_estudiante_three()
+@app.get("/estudiantes/{id}/califiaciones")
+def get_estudiante_calificaciones_three(id: int):
+    return analizar_calificaciones_estudiante_three(id)
 
 
 @app.get("/docentes/1/notas")

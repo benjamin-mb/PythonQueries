@@ -3,12 +3,12 @@ import pandas as pd
 from requests.auth import HTTPBasicAuth
 
 # Evolución de asistencias por fecha
-def analizar_estudiante_two():
+def analizar_estudiante_two(id: int):
     # Autenticación básica
     auth = HTTPBasicAuth("12344321", "DevUser123")
 
     # 1. Obtener los datos desde el endpoint protegido usando auth
-    Asistencia_URL = "https://cesde-academic-app-development.up.railway.app/asistencia/estudiante/13"
+    Asistencia_URL = f"https://cesde-academic-app-development.up.railway.app/asistencia/estudiante/{id}"
     response = requests.get(Asistencia_URL, auth=auth)
 
     # 2. Convertir respuesta JSON a DataFrame
