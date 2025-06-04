@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 @app.get("/estudiantes/1/asistencias")
-def get_estudiante_asistencias_1():
+def get_estudiante_asistencias():
     return analizar_estudiante_one()
 
 @app.get("/estudiantes/2/asistencias")
