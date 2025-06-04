@@ -2,38 +2,55 @@ import requests
 import pandas as pd
 from requests.auth import HTTPBasicAuth
 
-def docente_obetener_estudiantes_en_riesgo_asistencia_two():
+def docente_obetener_estudiantes_en_riesgo_asistencia_two(docenteId : int):
+    
     # Autenticación fija
     auth = HTTPBasicAuth("12344321", "DevUser123")
 
-    # Paso 1: Obtener los docentes (no se usa el resultado, pero lo dejamos como está)
-    Docentes_URL = "https://cesde-academic-app-development.up.railway.app/usuario/buscar/tipo/DOCENTE"
-    requests.get(Docentes_URL, auth=auth)
+    # Paso 1: Obtener clases del docente
+    url_clases = f"https://cesde-academic-app-development.up.railway.app/clase/docente/{docenteId}"
+    response_clases = requests.get(url_clases, auth=auth)
+    if response_clases.status_code != 200:
+        return {"error": "No se pudieron obtener las clases del docente"}
 
-    # Paso 2: Obtener las clases del docente 101
-    Clases_URL = "https://cesde-academic-app-development.up.railway.app/clase/docente/101"
-    requests.get(Clases_URL, auth=auth)
+    data_clases = response_clases.json()
+    if not data_clases:
+        return {"error": "El docente no tiene clases asignadas"}
 
-    # Paso 3: Código del grupo
-    codigoGrupo = 'P1-S2025-1-1'
-    GrupoCodigo_URL = f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{codigoGrupo}"
-    response_grupo = requests.get(GrupoCodigo_URL, auth=auth)
-    data_grupo = response_grupo.json()
-    idGrupo = data_grupo[0]['id']
+    # Paso 2: Obtener todos los códigos de grupo únicos
+    codigos_grupo = list(set(clase["grupo"] for clase in data_clases))
 
-    # Paso 4: Obtener estudiantes del grupo
-    GrupoID_URL = f"https://cesde-academic-app-development.up.railway.app/grupo-estudiante/grupo/{idGrupo}"
-    response_estudiantes = requests.get(GrupoID_URL)
-    data_estudiantes = response_estudiantes.json()
-    df_estudiantes = pd.DataFrame(data_estudiantes)
-    lista_estudiantes_ids = df_estudiantes["estudianteId"].tolist()
+    # Paso 3: Obtener IDs de grupo
+    ids_grupo = []
+    for codigo in codigos_grupo:
+        url_grupo = f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{codigo}"
+        response_grupo = requests.get(url_grupo, auth=auth)
+        if response_grupo.status_code == 200 and response_grupo.json():
+            grupo_id = response_grupo.json()[0]["id"]
+            ids_grupo.append((codigo, grupo_id))
+
+    if not ids_grupo:
+        return {"error": "No se encontraron IDs para los grupos del docente"}
+
+    # Paso 4: Obtener estudiantes de todos los grupos
+    lista_estudiantes_ids = []
+    for codigo, idGrupo in ids_grupo:
+        GrupoID_URL = f"https://cesde-academic-app-development.up.railway.app/grupo-estudiante/grupo/{idGrupo}"
+        response_estudiantes = requests.get(GrupoID_URL, auth=auth)
+        if response_estudiantes.status_code == 200:
+            data_estudiantes = response_estudiantes.json()
+            for est in data_estudiantes:
+                lista_estudiantes_ids.append(est["estudianteId"])
+
+    if not lista_estudiantes_ids:
+        return {"mensaje": "No se encontraron estudiantes en los grupos del docente"}
 
     # Paso 5: Recorrer estudiantes y juntar asistencias
     df_Asistencias_total = []
 
     for estudianteId in lista_estudiantes_ids:
         url_asistencias = f"https://cesde-academic-app-development.up.railway.app/asistencia/estudiante/{estudianteId}"
-        response = requests.get(url_asistencias)
+        response = requests.get(url_asistencias, auth=auth)
 
         if response.status_code == 200:
             data_asistencias = response.json()
