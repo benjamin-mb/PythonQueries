@@ -2,6 +2,8 @@ import requests
 import pandas as pd
 from requests.auth import HTTPBasicAuth
 
+#Cuál es el promedio de notas de mis estudiantes por asignatura?
+
 def docente_promedios_grupo_one(docenteId: int):
     auth = HTTPBasicAuth("12344321", "DevUser123")
 

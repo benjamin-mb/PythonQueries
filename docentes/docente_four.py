@@ -1,105 +1,85 @@
 import requests
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 from requests.auth import HTTPBasicAuth
 
+#Cuál es el promedio de notas de mis estudiantes por asignatura?
 
+def docente_promedio_notas_por_asignatura_four(docente_id: int):
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
-##Cuál es el promedio de notas de mis estudiantes por asignatura?
+    # 1. Obtener clases del docente
+    url_clases = f"https://cesde-academic-app-development.up.railway.app/clase/docente/{docente_id}"
+    response_clases = requests.get(url_clases, auth=auth)
+    if response_clases.status_code != 200:
+        return {"error": "No se pudieron obtener las clases del docente"}
 
-##accedo a docentes
-Docentes_URL="https://cesde-academic-app-development.up.railway.app/usuario/buscar/tipo/DOCENTE"
-responseDocentes=requests.get(Docentes_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-dataDocente=responseDocentes.json()
-df_docentes = pd.DataFrame(dataDocente)
+    data_clases = response_clases.json()
+    if not data_clases:
+        return {"error": "El docente no tiene clases asignadas"}
 
-##accedo a las clases para obetener el codigo del grupo
-Clases_URL="https://cesde-academic-app-development.up.railway.app/clase/docente/101"
-responseClases=requests.get(Clases_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-dataClase=responseClases.json()
-df_clases =pd.DataFrame(dataClase)
-#print(dataClase)
-
-codigoGrupo='P1-S2025-1-1'
-
-
-#por el codigo del grupo busco en el endpoint el id
-GrupoCodigo_URL=f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{codigoGrupo}"
-responseGrupoPorCodigo=requests.get(GrupoCodigo_URL)
-dataGroupdGetId=responseGrupoPorCodigo.json()
-df_group=pd.DataFrame(dataGroupdGetId)
-#print(dataGroupdGetId)
-
-idGrupo=dataGroupdGetId[0]['id']
-
-#busco en el endpoint los estudientes por grupo
-GrupoID_URL=f"https://cesde-academic-app-development.up.railway.app/grupo-estudiante/grupo/{idGrupo}"
-responseEstudiantesGrupo=requests.get(GrupoID_URL)
-dataEstudiantesporGroupId=responseEstudiantesGrupo.json()
-df_EstudiantesGrupoPorId=pd.DataFrame(dataEstudiantesporGroupId)
-# print(dataEstudiantesporGroupId)
-
-#creo una lista para guardar los id de los estudiantes
-listaEstudiantes_ids = df_EstudiantesGrupoPorId["estudianteId"].tolist()
-
-dfs_notas = []
-
-
-for estudianteId in listaEstudiantes_ids:
-    NotasPorIDEstudiante_URL=f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{estudianteId}"
-    response = requests.get(NotasPorIDEstudiante_URL)
+    df_clases = pd.DataFrame(data_clases)
     
-    if response.status_code == 200:
-        dataNotasEstudiantes = response.json()
-        df_notas = pd.DataFrame(dataNotasEstudiantes)
-        
-        # Agregamos el ID del estudiante al DataFrame si no viene
-        if not df_notas.empty:
-            df_notas["estudianteId"] = estudianteId
-            dfs_notas.append(df_notas)
-    else:
-        print(f"Error al obtener notas para estudiante {estudianteId}")
+    # 2. Obtener códigos de grupo y módulos únicos
+    grupos_modulos = df_clases[["grupo", "modulo"]].drop_duplicates().to_dict(orient="records")
 
-# Combinar todas las notas en un solo DataFrame
-df_todas_las_notas = pd.concat(dfs_notas, ignore_index=True)
+    resultados = []
 
-# Mostrar
-# print(df_todas_las_notas)
+    for item in grupos_modulos:
+        codigo_grupo = item["grupo"]
+        modulo = item["modulo"]
 
-# Agrupamos por estudianteId para contar y calcular promedio
-df_resumen_notas = df_todas_las_notas.groupby("estudianteId").agg(
-    cantidad_notas=pd.NamedAgg(column="nota", aggfunc="count"),
-    promedio_nota=pd.NamedAgg(column="nota", aggfunc="mean")
-).reset_index()
+        # 3. Obtener ID del grupo
+        url_grupo = f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{codigo_grupo}"
+        response_grupo = requests.get(url_grupo, auth=auth)
+        if response_grupo.status_code != 200 or not response_grupo.json():
+            continue
 
-# Categorizar rendimiento según promedio de nota
-def categorizar_promedio(promedio):
-    if promedio <= 2.9:
-        return "Bajo"
-    elif promedio < 4:
-        return "Medio"
-    else:
-        return "Alto"
+        id_grupo = response_grupo.json()[0]["id"]
 
-df_resumen_notas["categoria"] = df_resumen_notas["promedio_nota"].apply(categorizar_promedio)
+        # 4. Obtener estudiantes del grupo
+        url_estudiantes = f"https://cesde-academic-app-development.up.railway.app/grupo-estudiante/grupo/{id_grupo}"
+        response_estudiantes = requests.get(url_estudiantes, auth=auth)
+        if response_estudiantes.status_code != 200:
+            continue
 
-# Contar cuántos estudiantes hay en cada categoría
-conteo_categorias = df_resumen_notas["categoria"].value_counts()
-print(conteo_categorias)
+        estudiantes = response_estudiantes.json()
+        estudiante_ids = [est["estudianteId"] for est in estudiantes]
 
-# Labels y tamaños para pie chart
-labels = conteo_categorias.index.tolist()
-sizes = conteo_categorias.values.tolist()
+        # 5. Obtener notas de cada estudiante
+        dfs_notas = []
+        for estudiante_id in estudiante_ids:
+            url_notas = f"https://cesde-academic-app-development.up.railway.app/calificacion/estudiante/{estudiante_id}"
+            response_notas = requests.get(url_notas, auth=auth)
+            if response_notas.status_code == 200:
+                data_notas = response_notas.json()
+                df_notas = pd.DataFrame(data_notas)
+                if not df_notas.empty:
+                    df_notas["estudianteId"] = estudiante_id
+                    dfs_notas.append(df_notas)
 
-plt.figure(figsize=(6,6))
-plt.pie(
-    sizes,
-    labels=labels,
-    autopct='%1.1f%%',
-    startangle=90,
-    colors=sns.color_palette("pastel")
-)
-plt.title("Distribución de estudiantes según promedio de notas")
-plt.tight_layout()
-plt.show()
+        if not dfs_notas:
+            continue
+
+        df_total_notas = pd.concat(dfs_notas, ignore_index=True)
+
+        # 6. Calcular promedio por estudiante
+        df_resumen = df_total_notas.groupby("estudianteId").agg(
+            cantidad_notas=pd.NamedAgg(column="nota", aggfunc="count"),
+            promedio_nota=pd.NamedAgg(column="nota", aggfunc="mean")
+        ).reset_index()
+
+        # 7. Calcular promedio general del grupo en ese módulo
+        promedio_general = round(df_resumen["promedio_nota"].mean(), 2)
+        cantidad_estudiantes = df_resumen.shape[0]
+
+        resultados.append({
+            "grupo": codigo_grupo,
+            "modulo": modulo,
+            "promedio_general": promedio_general,
+            "estudiantes_con_notas": cantidad_estudiantes
+        })
+
+    if not resultados:
+        return {"mensaje": "No se encontraron notas en los grupos del docente."}
+
+    return resultados

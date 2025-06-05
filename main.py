@@ -8,6 +8,8 @@ from estudiantes.estudiante_three import analizar_calificaciones_estudiante_thre
 from docentes.docente_one import docente_promedios_grupo_one
 from docentes.docente_two import docente_obetener_estudiantes_en_riesgo_asistencia_two
 from docentes.docente_three import docentes_porcentajes_de_estado_por_grupo_three
+from docentes.docente_four import docente_promedio_notas_por_asignatura_four
+from docentes.docentes_five import docente_cantidad_estudiantes_por_clase_five
 
 app = FastAPI()
 
@@ -36,13 +38,21 @@ def get_estudiante_calificaciones_three(id: int):
 def get_docentes_notas_grupo_one(id):
     return docente_promedios_grupo_one(id)
 
-@app.get("docentes/{id}/asistencia")
+@app.get("/docentes/{id}/asistencia")
 def get_docentes_riesgo_asistencia_two(id):
     return docente_obetener_estudiantes_en_riesgo_asistencia_two(id)
 
-@app.get("docentes/{id}/aistencias/porcentajes")
+@app.get("/docentes/{id}/aistencias/porcentajes")
 def get_porcentaje_estado_asistencias_three(id):
     return docentes_porcentajes_de_estado_por_grupo_three(id)
+
+@app.get("/docentes/{id}/promedio/notas")
+def get_promedio_notas_por_clase(id):
+    return docente_promedio_notas_por_asignatura_four(id)
+
+@app.get("/docentes/clases/{id}/estudiantes")
+def get_cantidad_de_clase_y_estudiantes_por_clase_five(id):
+    return docente_cantidad_estudiantes_por_clase_five(id)
 
 # Servidor Uvicorn para ejecutar directamente con `python main.py`
 if __name__ == "__main__":

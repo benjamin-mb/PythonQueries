@@ -1,74 +1,54 @@
 import requests
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 from requests.auth import HTTPBasicAuth
 
-#cuantas clases tiene el docente y cual es la cantidad de estudiantes?
+def docente_cantidad_estudiantes_por_clase_five(docente_id: int):
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
-##accedo a docentes
-Docentes_URL="https://cesde-academic-app-development.up.railway.app/usuario/buscar/tipo/DOCENTE"
-responseDocentes=requests.get(Docentes_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-dataDocente=responseDocentes.json()
-df_docentes = pd.DataFrame(dataDocente)
+    # 1. Obtener clases del docente
+    url_clases = f"https://cesde-academic-app-development.up.railway.app/clase/docente/{docente_id}"
+    response_clases = requests.get(url_clases, auth=auth)
+    if response_clases.status_code != 200:
+        return {"error": "No se pudieron obtener las clases del docente"}
 
-##accedo a las clases para obetener el codigo del grupo
-Clases_URL="https://cesde-academic-app-development.up.railway.app/clase/docente/101"
-responseClases=requests.get(Clases_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-dataClase=responseClases.json()
-df_clases =pd.DataFrame(dataClase)
-print()
+    data_clases = response_clases.json()
+    if not data_clases:
+        return {"error": "El docente no tiene clases asignadas"}
 
-codigos_grupo = df_clases["grupo"].tolist()
-print(codigos_grupo)
+    df_clases = pd.DataFrame(data_clases)
 
+    # 2. Obtener combinaciones únicas de grupo y módulo
+    grupos_modulos = df_clases[["grupo", "modulo", "id"]].drop_duplicates()
 
-# Lista donde guardaremos los IDs reales
-ids_grupos = []
+    resultados = []
 
+    for _, row in grupos_modulos.iterrows():
+        codigo_grupo = row["grupo"]
+        modulo_nombre = row["modulo"]
+        clase_id = row["id"]
 
-# 4. Recorer el array para obtener los id de los grupos
-for code in codigos_grupo:
-    GrupoCodigo_URL=f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{code}"
-    response = requests.get(GrupoCodigo_URL)
-    
-    if response.status_code == 200:
-        data = response.json()
-        id_grupo = data[0].get("id")
-        if id_grupo is not None:
-            ids_grupos.append(id_grupo)
-            print(f"{code} → ID {id_grupo}")
-        else:
-            print(f"{code} no tiene 'id' en la respuesta")
-    else:
-        print(f"Error al consultar el grupo {code}: {response.status_code}")
+        # 3. Obtener ID del grupo
+        url_grupo = f"https://cesde-academic-app-development.up.railway.app/grupo/buscar/codigo/{codigo_grupo}"
+        response_grupo = requests.get(url_grupo, auth=auth)
+        if response_grupo.status_code != 200 or not response_grupo.json():
+            continue
 
-# Diccionario para almacenar los resultados
-estudiantes_por_grupo = {}
+        id_grupo = response_grupo.json()[0]["id"]
 
-# Recorremos los IDs de grupo
-for idGrupo in ids_grupos:
-    url = f"https://cesde-academic-app-development.up.railway.app/grupo-estudiante/grupo/{idGrupo}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        num_estudiantes = len(data)  # Cada item es un estudiante
-        estudiantes_por_grupo[idGrupo] = num_estudiantes
-        
-    else:
-        print(f"Error al consultar el grupo {idGrupo}: {response.status_code}")
-        estudiantes_por_grupo[idGrupo] = 0
+        # 4. Obtener estudiantes del grupo
+        url_estudiantes = f"https://cesde-academic-app-development.up.railway.app/grupo-estudiante/grupo/{id_grupo}"
+        response_estudiantes = requests.get(url_estudiantes, auth=auth)
+        if response_estudiantes.status_code != 200:
+            continue
 
-# Convertimos a DataFrame para visualizar o graficar
-df_estudiantes = pd.DataFrame(list(estudiantes_por_grupo.items()), columns=["Grupo_ID", "Cantidad_Estudiantes"])
+        estudiantes = response_estudiantes.json()
+        cantidad_estudiantes = len(estudiantes)
 
-sns.barplot(data=df_estudiantes, x="Grupo_ID", y="Cantidad_Estudiantes")
-plt.title("Cantidad de estudiantes por grupo")
-plt.xlabel("ID del Grupo")
-plt.ylabel("Cantidad de estudiantes")
-plt.tight_layout()
-plt.show()
+        resultados.append({
+            "clase_id": clase_id,
+            "modulo": modulo_nombre,
+            "grupo_codigo": codigo_grupo,
+            "cantidad_estudiantes": cantidad_estudiantes
+        })
 
-    
-
+    return {"data": resultados}

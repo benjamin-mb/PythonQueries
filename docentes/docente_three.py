@@ -3,6 +3,7 @@ import pandas as pd
 from requests.auth import HTTPBasicAuth
 
 # ¿Cuál es el porcentaje total de estados de asistencia?
+
 def docentes_porcentajes_de_estado_por_grupo_three(docenteId: int):
     # Autenticación fija
     auth = HTTPBasicAuth("12344321", "DevUser123")
@@ -69,5 +70,6 @@ def docentes_porcentajes_de_estado_por_grupo_three(docenteId: int):
     # Paso 7: Contar estados
     conteo_estados = df_asistencias_final["estado"].value_counts(normalize=True) * 100
     porcentaje_estados = conteo_estados.round(2).to_dict()
+    print(porcentaje_estados)
 
     return porcentaje_estados
