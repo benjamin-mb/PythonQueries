@@ -11,6 +11,8 @@ from docentes.docente_three import docentes_porcentajes_de_estado_por_grupo_thre
 from docentes.docente_four import docente_promedio_notas_por_asignatura_four
 from docentes.docentes_five import docente_cantidad_estudiantes_por_clase_five
 
+from directivo.directivo_one import directivo_programas_por_escuela_uno
+
 app = FastAPI()
 
 app.add_middleware(
@@ -53,6 +55,12 @@ def get_promedio_notas_por_clase(id):
 @app.get("/docentes/clases/{id}/estudiantes")
 def get_cantidad_de_clase_y_estudiantes_por_clase_five(id):
     return docente_cantidad_estudiantes_por_clase_five(id)
+
+#Directivos
+
+@app.get("/directivo/programas/escuela")
+def get_cantidad_grupos_por_escuela():
+    return directivo_programas_por_escuela_uno()
 
 # Servidor Uvicorn para ejecutar directamente con `python main.py`
 if __name__ == "__main__":
