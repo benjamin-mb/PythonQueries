@@ -1,83 +1,51 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+from requests.auth import HTTPBasicAuth
 
-#promedio de notas por clase
+def administrativo_promedio_notas_por_clase_five():
+    
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
-Clases_URL="https://cesde-academic-app-development.up.railway.app/clase/lista"
-response_clase=requests.get(Clases_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_clases=response_clase.json()
-df_clases=pd.DataFrame(data_clases)
+    # --- Descargar datos ---
+    df_clases = pd.DataFrame(requests.get(
+        "https://cesde-academic-app-development.up.railway.app/clase/lista", auth=auth).json())
 
-Calificaiones_URL="https://cesde-academic-app-development.up.railway.app/calificacion/lista"
-response_calificaciones=requests.get(Calificaiones_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_calificaciones=response_calificaciones.json()
-df_calificaciones=pd.DataFrame(data_calificaciones)
+    df_calif  = pd.DataFrame(requests.get(
+        "https://cesde-academic-app-development.up.railway.app/calificacion/lista", auth=auth).json())
 
-Actividades_URL="https://cesde-academic-app-development.up.railway.app/actividad/lista"
-response_actividades=requests.get(Actividades_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_actividades=response_actividades.json()
-df_actividades=pd.DataFrame(data_actividades)
+    df_activ  = pd.DataFrame(requests.get(
+        "https://cesde-academic-app-development.up.railway.app/actividad/lista", auth=auth).json())
 
-# Paso 1: renombramos columnas para facilitar el merge
-df_actividades_ren = df_actividades.rename(columns={
-    "tipo": "actividad", 
-    "fechaEntrega": "fecha"
-})
+    if df_clases.empty or df_calif.empty:
+        return {"error": "No se encontraron datos de clases o calificaciones"}
 
-# Paso 2: combinamos por 'actividad' y 'fecha'
-df_notas_con_actividad = pd.merge(
-    df_calificaciones,
-    df_actividades_ren,
-    on=["actividad", "fecha"],
-    how="left"
-)
+    # --- Preparar actividades para poder unir por 'actividad' y 'fecha' ---
+    df_activ = df_activ.rename(columns={"tipo": "actividad", "fechaEntrega": "fecha"})
 
-#extraemos de el diccionea
-df_notas_con_actividad["grupo"] = df_notas_con_actividad["clase"].apply(lambda c: c["grupo"])
+    # --- Unir calificaciones con actividades (para validar actividad/fecha) ---
+    df_notas = df_calif.merge(df_activ, on=["actividad", "fecha"], how="left")
 
-df_notas_con_clase = df_notas_con_actividad.merge(df_clases, on="grupo", how="left")
-df_promedio_por_clase = df_notas_con_clase.groupby("id")["nota"].mean().reset_index()
-print(df_promedio_por_clase)
-
-
-def color_por_nota(nota):
-    if nota < 3.0:
-        return 'red'
-    elif nota < 4.0:
-        return 'gold'
+    # --- Extraer 'grupo' del campo anidado 'clase' ---
+    if "clase" in df_notas.columns:
+        df_notas["grupo"] = df_notas["clase"].apply(lambda c: c.get("grupo") if isinstance(c, dict) else None)
     else:
-        return 'green'
+        df_notas["grupo"] = None  # fallback
 
-# Aplicar colores
-colores = df_promedio_por_clase["nota"].apply(color_por_nota)
+    # --- Unir con df_clases para obtener id de clase, módulo, docente ---
+    df_notas = df_notas.merge(df_clases, on="grupo", how="left", suffixes=('', '_clase'))
 
-# Crear figura más ancha para todos los IDs
-plt.figure(figsize=(max(12, len(df_promedio_por_clase) * 0.5), 6))
+    # --- Calcular promedio por clase id ---
+    df_prom = (
+        df_notas.groupby("id")["nota"]
+        .mean()
+        .reset_index(name="promedio_nota")
+        .merge(
+            df_clases[["id", "grupo", "modulo", "docente"]],
+            on="id",
+            how="left"
+        )
+        .rename(columns={"id": "clase_id"})
+        .sort_values(by="promedio_nota", ascending=False)
+    )
 
-# Dibujar barras con color y borde
-plt.bar(df_promedio_por_clase["id"], df_promedio_por_clase["nota"],
-        color=colores, edgecolor='black', width=0.6)
-
-# Título y ejes
-plt.title("Promedio de Nota por Clase (Todos los IDs Visibles)", fontsize=14)
-plt.xlabel("ID de Clase")
-plt.ylabel("Promedio de Nota")
-
-# Mostrar todos los ticks de ID en el eje X
-plt.xticks(
-    ticks=df_promedio_por_clase["id"],
-    labels=df_promedio_por_clase["id"],
-    rotation=90,
-    fontsize=8  # Tamaño pequeño para que quepan
-)
-
-# Mostrar el valor numérico encima de cada barra
-for i, v in enumerate(df_promedio_por_clase["nota"]):
-    plt.text(df_promedio_por_clase["id"].iloc[i], v + 0.03, f"{v:.2f}",
-             ha='center', va='bottom', fontsize=7)
-
-plt.tight_layout()
-plt.show()
+    return df_prom.to_dict(orient="records")

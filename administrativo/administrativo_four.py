@@ -1,26 +1,27 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+from requests.auth import HTTPBasicAuth
 
-ClasesHorarios_URL="https://cesde-academic-app-development.up.railway.app/clase-horario/lista"
-response_ClaseHorario=requests.get(ClasesHorarios_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_claseHorario=response_ClaseHorario.json()
-df_claseHorarios=pd.DataFrame(data_claseHorario)
+def administrativo_conteo_horarios_por_dia_four():
+   
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
-#print(df_claseHorarios)
+    # Descargar los horarios de todas las clases
+    url = "https://cesde-academic-app-development.up.railway.app/clase-horario/lista"
+    df_horarios = pd.DataFrame(requests.get(url, auth=auth).json())
 
-conteo_dias = df_claseHorarios.groupby('dia').size().reindex(
-    ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'],
-    fill_value=0
-)
+    if df_horarios.empty or "dia" not in df_horarios.columns:
+        return {"error": "No se encontraron horarios o falta la columna 'dia'"}
 
-conteo_dias.plot(kind='bar', figsize=(10,5), color='skyblue', edgecolor='black')
-plt.title("Número de clases por día de la semana")
-plt.xlabel("Día")
-plt.ylabel("Cantidad")
-plt.xticks(rotation=45)
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.tight_layout()
-plt.show()
+    # Orden de días según la API
+    orden_dias = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"]
+
+    # Conteo por día, asegurando incluir días sin clases
+    conteo = (
+        df_horarios.groupby("dia").size()
+        .reindex(orden_dias, fill_value=0)
+        .reset_index(name="total")
+        .rename(columns={"dia": "dia"})
+    )
+
+    return conteo.to_dict(orient="records")
