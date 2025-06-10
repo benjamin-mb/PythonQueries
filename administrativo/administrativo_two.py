@@ -1,46 +1,28 @@
+import pandas as pd
 import requests
 from requests.auth import HTTPBasicAuth
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 
-# Distribución de estudiantes por grupo
+def administrativo_distribucion_estudiantes_por_grupo_two():
+    # 1. Cargar datos
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
+    grupo_estudiante_url = "https://cesde-academic-app-development.up.railway.app/grupo-estudiante/lista"
+    grupos_url = "https://cesde-academic-app-development.up.railway.app/grupo/lista"
 
-Grupos_URL="https://cesde-academic-app-development.up.railway.app/grupo/lista"
-GrupoResponse=requests.get(Grupos_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_Grupo=GrupoResponse.json()
-df_grupos=pd.DataFrame(data_Grupo)
+    df_grupo_est = pd.DataFrame(requests.get(grupo_estudiante_url, auth=auth).json())
+    df_grupos = pd.DataFrame(requests.get(grupos_url, auth=auth).json())
 
-GrupoEstudiante_URL="https://cesde-academic-app-development.up.railway.app/grupo-estudiante/lista"
-GrupoEstudiante_Response=requests.get(GrupoEstudiante_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_grupoEstudiante=GrupoEstudiante_Response.json()
-df_grupo_estudiante=pd.DataFrame(data_grupoEstudiante)
+    # Validación para evitar errores si los datos vienen vacíos
+    if df_grupo_est.empty or df_grupos.empty:
+        return {"error": "Datos vacíos de grupo o grupo-estudiante"}
 
-Programas_URL="https://cesde-academic-app-development.up.railway.app/programa/lista"
-ProgramasResponse=requests.get(Programas_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_Programas=ProgramasResponse.json()
-df_programas=pd.DataFrame(data_Programas)
+    # 2. Agrupar: contar estudiantes por grupoId
+    estudiantes_por_grupo = df_grupo_est['grupoId'].value_counts().reset_index()
+    estudiantes_por_grupo.columns = ['grupoId', 'total_estudiantes']
 
-Clases_URL="https://cesde-academic-app-development.up.railway.app/clase/lista"
-response_clase=requests.get(Clases_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_clases=response_clase.json()
-df_clases=pd.DataFrame(data_clases)
+    # 3. Unir con los códigos de grupo
+    grupos_codigos = df_grupos[['id', 'codigo']].rename(columns={'id': 'grupoId'})
+    resultado = estudiantes_por_grupo.merge(grupos_codigos, on='grupoId', how='left')
 
-Asistencia_URL="https://cesde-academic-app-development.up.railway.app/asistencia/lista"
-response_asistencia=requests.get(Asistencia_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_asistencias=response_asistencia.json()
-df_asistencias=pd.DataFrame(data_asistencias)
-
-estudiantes_por_grupo = df_grupo_estudiante['grupoId'].value_counts().reset_index()
-estudiantes_por_grupo.columns = ['grupoId', 'total_estudiantes']
-grupo_nombres = df_grupos[['id', 'codigo']].rename(columns={'id': 'grupoId'})
-estudiantes_por_grupo = estudiantes_por_grupo.merge(grupo_nombres, on='grupoId')
-
-plt.figure(figsize=(10, 6))
-sns.barplot(data=estudiantes_por_grupo, x='total_estudiantes', y='codigo', palette='coolwarm')
-plt.title('Cantidad de estudiantes por Grupo')
-plt.xlabel('Total de estudiantes')
-plt.ylabel('Código del Grupo')
-plt.tight_layout()
-plt.show()
+    # 4. Convertir a lista de diccionarios para retornar como JSON
+    return resultado.to_dict(orient='records')

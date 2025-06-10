@@ -17,6 +17,7 @@ from directivo.directivo_three import directivo_obtener_estudiantes_activos_por_
 from directivo.directivo_four import directivo_escuela_mas_programas_four
 
 from administrativo.administrativo_one import administrativo_distribucion_estudiantes_por_programa_one
+from administrativo.administrativo_two import administrativo_distribucion_estudiantes_por_grupo_two
 
 app = FastAPI()
 
@@ -83,6 +84,11 @@ def get_escuelas_con_mayor_cantidad_de_escuelas():
 @app.get("/administrativo/distribucion/programa")
 def get_distribucion_estudiantes_por_programa():
     return administrativo_distribucion_estudiantes_por_programa_one()
+
+@app.get("/administrativo/distribucion/grupo")
+def get_distribucion_estudiantes_por_grupo():
+    return administrativo_distribucion_estudiantes_por_grupo_two()
+
 
 # Servidor Uvicorn para ejecutar directamente con `python main.py`
 if __name__ == "__main__":
