@@ -13,6 +13,8 @@ from docentes.docentes_five import docente_cantidad_estudiantes_por_clase_five
 
 from directivo.directivo_one import directivo_programas_por_escuela_uno
 from directivo.directivo_two import directivo_clases_horarios_por_modulo_dos
+from directivo.directivo_three import directivo_obtener_estudiantes_activos_por_escuela_three
+from directivo.directivo_four import directivo_escuela_mas_programas_four
 
 app = FastAPI()
 
@@ -66,6 +68,14 @@ def get_cantidad_grupos_por_escuela():
 @app.get("/directivos/clases/modulo/horarios")
 def get_cantidad_clases_por_horario_y_horarios_por_clase():
     return directivo_clases_horarios_por_modulo_dos()
+
+@app.get("/directivos/activos/estudiantes")
+def get_estudiantes_activos_por_escuela():
+    return directivo_obtener_estudiantes_activos_por_escuela_three()
+
+@app.get("/directivos/programas/escuelas")
+def get_escuelas_con_mayor_cantidad_de_escuelas():
+    return directivo_escuela_mas_programas_four()
 
 # Servidor Uvicorn para ejecutar directamente con `python main.py`
 if __name__ == "__main__":

@@ -1,18 +1,29 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+from requests.auth import HTTPBasicAuth
 
-#que escuela tiene mas programas
-Escuelas_URL="https://cesde-academic-app-development.up.railway.app/escuela/lista"
-Escuela_Response=requests.get(Escuelas_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_escuelas=Escuela_Response.json()
-df_escuelas=pd.DataFrame(data_escuelas)
+def directivo_escuela_mas_programas_four():
+   
+    auth = HTTPBasicAuth("12344321", "DevUser123")
 
+    # Obtener programas
+    url_programas = "https://cesde-academic-app-development.up.railway.app/programa/lista"
+    df_programas = pd.DataFrame(requests.get(url_programas, auth=auth).json())
 
-Programas_URL="https://cesde-academic-app-development.up.railway.app/programa/lista"
-ProgramasResponse=requests.get(Programas_URL,auth=HTTPBasicAuth("12344321", "DevUser123"))
-data_Programas=ProgramasResponse.json()
-df_programas=pd.DataFrame(data_Programas)
+    if df_programas.empty or "escuela" not in df_programas.columns:
+        return {"error": "No se encontraron programas o columna 'escuela' ausente"}
 
+    # Conteo de programas por escuela
+    conteo = (
+        df_programas.groupby("escuela")
+        .size()
+        .reset_index(name="cantidad_programas")
+    )
+
+    # Valor máximo
+    max_programas = conteo["cantidad_programas"].max()
+
+    # Escuelas con el máximo
+    top_escuelas = conteo[conteo["cantidad_programas"] == max_programas]
+
+    return top_escuelas.to_dict(orient="records")
